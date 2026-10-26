@@ -56,6 +56,77 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/ingredients:
+    get:
+      tags: [Nutrition]
+      summary: List ingredients
+      description: List canonical ingredients from the nutrition graph. Nutrients per 100 g edible raw portion.
+      parameters:
+        - name: q
+          in: query
+          schema: {type: string}
+        - name: category
+          in: query
+          schema: {type: string}
+        - name: excludeAllergen
+          in: query
+          schema: {type: string}
+        - name: limit
+          in: query
+          schema: {type: integer, default: 50}
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+      responses:
+        "200":
+          description: Ingredient list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ingredient"
+        "422":
+          description: Validation error (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/recipes/{recipeId}:
+    get:
+      tags: [Nutrition]
+      summary: Get recipe with computed nutrition
+      description: Returns recipe with deterministically computed KBZHU from the ingredient graph. No stored nutrients.
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: servings
+          in: query
+          schema: {type: integer}
+        - name: includeOptional
+          in: query
+          schema: {type: boolean, default: false}
+      responses:
+        "200":
+          description: Recipe with nutrition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeNutrition"
+        "404":
+          description: Recipe not found (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Validation error (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 components:
   schemas:
     DegradationLevel:
@@ -118,3 +189,127 @@ components:
           type: string
         traceId:
           type: string
+    Ingredient:
+      type: object
+      required: [id, name, category, kcalPer100g, proteinPer100g, fatPer100g, carbPer100g, fiberPer100g, yieldFactorCooked, wasteFactor, allergens, tags]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        kcalPer100g:
+          type: number
+        proteinPer100g:
+          type: number
+        fatPer100g:
+          type: number
+        carbPer100g:
+          type: number
+        fiberPer100g:
+          type: number
+        densityGPerMl:
+          type: number
+          nullable: true
+        yieldFactorCooked:
+          type: number
+        wasteFactor:
+          type: number
+        allergens:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+    NutrientsBatch:
+      type: object
+      properties:
+        kcal:
+          type: number
+        protein:
+          type: number
+        fat:
+          type: number
+        carb:
+          type: number
+        fiber:
+          type: number
+    RecipeIngredient:
+      type: object
+      properties:
+        ingredientName:
+          type: string
+        optional:
+          type: boolean
+        substitutionGroup:
+          type: string
+          nullable: true
+        gramsRaw:
+          type: number
+        gramsGross:
+          type: number
+        gramsCooked:
+          type: number
+    RecipeStep:
+      type: object
+      properties:
+        stepNo:
+          type: integer
+        text:
+          type: string
+        timerSec:
+          type: integer
+    RecipeNutrition:
+      type: object
+      required: [id, title, timeMin, difficulty, equipment, baseServings, requestedServings, tags, allergens, nutrition, ingredients, steps]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        timeMin:
+          type: integer
+        difficulty:
+          type: string
+        equipment:
+          type: array
+          items:
+            type: string
+        baseServings:
+          type: integer
+        requestedServings:
+          type: number
+        tags:
+          type: array
+          items:
+            type: string
+        allergens:
+          type: array
+          items:
+            type: string
+        nutrition:
+          type: object
+          properties:
+            totalBatch:
+              $ref: "#/components/schemas/NutrientsBatch"
+            perServing:
+              $ref: "#/components/schemas/NutrientsBatch"
+            per100gCooked:
+              $ref: "#/components/schemas/NutrientsBatch"
+            rawEdibleWeightG:
+              type: number
+            grossPurchaseWeightG:
+              type: number
+            cookedWeightG:
+              type: number
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeIngredient"
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeStep"
