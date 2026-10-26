@@ -97,8 +97,10 @@ def tags_for(cat: str) -> list[str]:
 
 
 def to_sql_array(values: list[str]) -> str:
-    inner = ", ".join('"%s"' % v for v in values)
-    return "{" + inner + "}"
+    if not values:
+        return "'{}'::text[]"
+    inner = ", ".join("'%s'" % v for v in values)
+    return "ARRAY[" + inner + "]"
 
 
 def emit_v003(rows: list[list[str]]) -> str:
