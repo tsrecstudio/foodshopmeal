@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: core-api
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/foodshop}
+    username: ${SPRING_DATASOURCE_USERNAME:foodshop}
+    password: ${SPRING_DATASOURCE_PASSWORD:foodshop_dev_pwd}
+  flyway:
+    enabled: true
+    default-schema: core
+    schemas:
+      - core
+      - identity_pii
+      - catalog
+      - fulfillment
+    locations:
+      - optional:filesystem:/app/db/migrations
+      - optional:filesystem:../../db/migrations
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2s
+
+fsm:
+  solver:
+    base-url: ${FSM_SOLVER_BASE_URL:http://localhost:8000}
+  s3:
+    endpoint: ${FSM_S3_ENDPOINT:http://localhost:9000}
+    region: ${FSM_S3_REGION:ru-central1}
+    access-key: ${FSM_S3_ACCESS_KEY:foodshop_minio}
+    secret-key: ${FSM_S3_SECRET_KEY:foodshop_minio_pwd}
+    bucket-feeds: ${FSM_S3_BUCKET_FEEDS:catalog-feeds}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis,s3Storage,solverService
+  tracing:
+    sampling:
+      probability: 1.0

@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: FoodShopMeal Solver Service Internal API
+  version: 0.1.0
+  description: Internal HTTP contract between core-api and solver-svc (CP-SAT & SKU Matcher)
+servers:
+  - url: http://solver-svc:8000
+paths:
+  /health/live:
+    get:
+      summary: Liveness probe
+      operationId: solverLiveness
+      responses:
+        "200":
+          description: Service process alive
+  /health/ready:
+    get:
+      summary: Readiness probe (CP-SAT engine + pgvector + optional PostgreSQL)
+      operationId: solverReadiness
+      responses:
+        "200":
+          description: Solver ready
+        "503":
+          description: Solver degraded
+  /internal/v1/match-skus:
+    post:
+      summary: Normalize and match raw SKUs to canonical ingredients (implemented in M2)
+      operationId: matchSkus
+      responses:
+        "200":
+          description: Matched SKU results
+        "422":
+          description: Validation error (RFC 7807)
+        "501":
+          description: Stub in M0 (implemented in M2)
+  /internal/v1/optimize-plan:
+    post:
+      summary: Optimize 7-day meal plan and store SKU basket via CP-SAT (implemented in M3)
+      operationId: optimizePlan
+      responses:
+        "200":
+          description: Optimal or feasible weekly plan + basket
+        "422":
+          description: Validation error (RFC 7807)
+        "501":
+          description: Stub in M0 (implemented in M3)

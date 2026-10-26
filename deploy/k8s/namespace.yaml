@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foodshopmeal
+  labels:
+    app.kubernetes.io/part-of: foodshopmeal
+    compliance.ru/152-fz-zone: rf-resident

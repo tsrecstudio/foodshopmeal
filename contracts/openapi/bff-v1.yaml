@@ -1,0 +1,120 @@
+openapi: 3.1.0
+info:
+  title: FoodShopMeal BFF API
+  version: 0.1.0
+  description: >-
+    Screen-oriented BFF API for Flutter (iOS/Android) and Web clients.
+    Supports seamless degradation L1 (smart shopping list) -> L2 (cart) -> L3 (Kuper checkout).
+servers:
+  - url: http://localhost:8080
+paths:
+  /actuator/health/liveness:
+    get:
+      summary: Liveness probe
+      operationId: getLiveness
+      responses:
+        "200":
+          description: Process is alive
+  /actuator/health/readiness:
+    get:
+      summary: Readiness probe (PostgreSQL + Flyway, Redis, S3, solver-svc)
+      operationId: getReadiness
+      responses:
+        "200":
+          description: Service and dependencies are ready
+        "503":
+          description: At least one downstream dependency is unavailable
+  /api/v1/system/capabilities:
+    get:
+      summary: Resolve active degradation level (L1/L2/L3) and 152-FZ compliance metadata
+      operationId: getSystemCapabilities
+      parameters:
+        - name: lat
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+      responses:
+        "200":
+          description: Active capabilities and compliance requirements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemCapabilitiesResponse"
+        "422":
+          description: Validation error (RFC 7807)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+components:
+  schemas:
+    DegradationLevel:
+      type: string
+      enum: [L1, L2, L3]
+    RetailerCapability:
+      type: string
+      enum: [READ_CATALOG, CHECK_STOCK, DELIVERY_ZONES, FILL_CART, CHECKOUT]
+    ComplianceMetadata:
+      type: object
+      required:
+        - requiresHealthConsent152Fz
+        - policyVersion
+        - medicalStopListReasons
+        - nonMedicalDisclaimerRu
+      properties:
+        requiresHealthConsent152Fz:
+          type: boolean
+        policyVersion:
+          type: string
+        medicalStopListReasons:
+          type: array
+          items:
+            type: string
+        nonMedicalDisclaimerRu:
+          type: string
+    SystemCapabilitiesResponse:
+      type: object
+      required:
+        - effectiveDegradationLevel
+        - activeAdapter
+        - capabilities
+        - kuperFeatureEnabled
+        - compliance
+      properties:
+        effectiveDegradationLevel:
+          $ref: "#/components/schemas/DegradationLevel"
+        activeAdapter:
+          type: string
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/RetailerCapability"
+        kuperFeatureEnabled:
+          type: boolean
+        compliance:
+          $ref: "#/components/schemas/ComplianceMetadata"
+    ProblemDetail:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        traceId:
+          type: string

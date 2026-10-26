@@ -1,0 +1,40 @@
+# Local environment & secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# JVM / Kotlin / Gradle
+.gradle/
+**/build/
+!**/src/**/build/
+out/
+
+# Flutter / Dart
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/build/
+
+# Node / Web
+node_modules/
+.next/
+.vite/
+
+# IDE & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
