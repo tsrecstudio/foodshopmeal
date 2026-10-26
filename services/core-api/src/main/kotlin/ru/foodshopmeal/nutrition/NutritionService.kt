@@ -108,7 +108,7 @@ class NutritionService(
 
     fun getRecipe(recipeId: String, servings: Int, includeOptional: Boolean): RecipeNutritionDto {
         val recipe = jdbc.queryForMap(
-            "SELECT id, title, steps, time_min, equipment, servings, tags, difficulty FROM core.recipes WHERE id = ?::uuid",
+            "SELECT id, title, steps::text AS steps_text, time_min, equipment, servings, tags, difficulty FROM core.recipes WHERE id = ?::uuid",
             recipeId,
         )
         val title = recipe["title"] as String
@@ -159,9 +159,9 @@ class NutritionService(
         val calc = NutritionCalculator(scale)
         val nutrition = calc.compute(components, ingredientMap)
 
-        // parse steps jsonb
-        val stepsJson = recipe["steps"] as com.postgresql.util.PGobject
-        val stepsArray = objectMapper.readTree(stepsJson.value)
+        // parse steps jsonb (cast to text in SQL to avoid PGobject compile-time dep)
+        val stepsText = recipe["steps_text"] as String
+        val stepsArray = objectMapper.readTree(stepsText)
         val steps = stepsArray.map { node ->
             StepDto(
                 stepNo = node["stepNo"]?.asInt() ?: 0,
